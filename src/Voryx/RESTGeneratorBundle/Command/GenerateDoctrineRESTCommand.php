@@ -43,7 +43,7 @@ class GenerateDoctrineRESTCommand extends GenerateDoctrineCrudCommand
                 new InputOption('resource', '', InputOption::VALUE_NONE, 'The object will return with the resource name'),
                 new InputOption('document', '', InputOption::VALUE_NONE, 'Use NelmioApiDocBundle to document the controller'),
                 new InputOption('hateoas', '', InputOption::VALUE_NONE, 'Use BazingaHateoasBundle to handle the response'),
-                new InputOption('jms-group', '', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'JMSSerializerBundle group added to output Nelmio Doc. Add multiple times to give an array'),
+                new InputOption('jms-group', '', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'JMSSerializerBundle group added to output View and Nelmio Doc. Add multiple times to give an array'),
             )
         )
             ->setDescription('Generates a REST api based on a Doctrine entity')
@@ -103,6 +103,10 @@ EOT
         $document     = $input->getOption('document');
         $hateoas      = $input->getOption('hateoas');
         $outputGroups = $input->getOption('jms-group');
+
+        if (!in_array('Default', $outputGroups)) {
+            $outputGroups[] = 'Default';
+        }
 
         /** @var DoctrineRESTGenerator $generator */
         $generator = $this->getGenerator($bundle);

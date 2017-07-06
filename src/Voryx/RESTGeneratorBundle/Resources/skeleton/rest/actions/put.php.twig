@@ -35,7 +35,19 @@
      *
 {% endif %}
 {% endblock documentation %}
-     * @View(serializerEnableMaxDepthChecks=true)
+     * @View(
+{% if outputGroups | length %}
+     *   serializerGroups={
+    {%- for group in outputGroups -%}
+        "{{- group -}}"
+        {%- if not loop.last -%}
+            {{ ', ' }}
+        {%- endif -%}
+    {%- endfor -%}
+            },
+{% endif %}
+     *   serializerEnableMaxDepthChecks=true
+     * )
      *
      * @param Request $request
      * @param $entity
