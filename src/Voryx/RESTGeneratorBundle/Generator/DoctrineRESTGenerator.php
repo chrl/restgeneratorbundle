@@ -11,6 +11,7 @@
 
 namespace Voryx\RESTGeneratorBundle\Generator;
 
+use Doctrine\Common\Inflector\Inflector;
 use Sensio\Bundle\GeneratorBundle\Generator\Generator;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
@@ -28,6 +29,7 @@ class DoctrineRESTGenerator extends Generator
     protected $routeNamePrefix;
     protected $bundle;
     protected $entity;
+    protected $entityPl;
     protected $metadata;
     protected $format;
     protected $actions;
@@ -49,11 +51,15 @@ class DoctrineRESTGenerator extends Generator
      * @param string $entity The entity relative class name
      * @param ClassMetadataInfo $metadata The entity class metadata
      * @param string $routePrefix The route name prefix
-     * @param array $forceOverwrite Whether or not to overwrite an existing controller
+     * @param boolean $forceOverwrite Whether or not to overwrite an existing controller
+     * @param boolean $resource Whether or not to return entity with resource name
+     * @param boolean $document Whether or not to add NelmioApiDoc annotations
+     * @param boolean $hateoas Whether or not to configure get all entities as hateoas pattern
+     * @param array $outputGroups All JMS groups for entities output
      *
      * @throws \RuntimeException
      */
-    public function generate(BundleInterface $bundle, $entity, ClassMetadataInfo $metadata, $routePrefix, $forceOverwrite)
+    public function generate(BundleInterface $bundle, $entity, ClassMetadataInfo $metadata, $routePrefix, $forceOverwrite, $resource, $document, $hateoas, $outputGroups)
     {
         $this->routePrefix     = $routePrefix;
         $this->routeNamePrefix = str_replace('/', '_', $routePrefix);
@@ -68,11 +74,12 @@ class DoctrineRESTGenerator extends Generator
         }
 
         $this->entity   = $entity;
+        $this->entityPl = Inflector::pluralize($entity);
         $this->bundle   = $bundle;
         $this->metadata = $metadata;
         $this->setFormat('yml');
 
-        $this->generateControllerClass($forceOverwrite);
+        $this->generateControllerClass($forceOverwrite, $resource, $document, $hateoas, $outputGroups);
 
     }
 
@@ -129,8 +136,13 @@ class DoctrineRESTGenerator extends Generator
     /**
      * Generates the controller class only.
      *
+     * @param $forceOverwrite
+     * @param $resource
+     * @param $document
+     * @param $hateoas
+     * @param $outputGroups
      */
-    protected function generateControllerClass($forceOverwrite)
+    protected function generateControllerClass($forceOverwrite, $resource, $document, $hateoas, $outputGroups)
     {
         $dir = $this->bundle->getPath();
 
@@ -158,10 +170,15 @@ class DoctrineRESTGenerator extends Generator
                 'route_name_prefix' => $this->routeNamePrefix,
                 'bundle'            => $this->bundle->getName(),
                 'entity'            => $this->entity,
+                'entity_plural'     => $this->entityPl,
                 'entity_class'      => $entityClass,
                 'namespace'         => $this->bundle->getNamespace(),
                 'entity_namespace'  => $entityNamespace,
                 'format'            => $this->format,
+                'resource'          => $resource,
+                'document'          => $document,
+                'hateoas'           => $hateoas,
+                'outputGroups'      => $outputGroups,
             )
         );
     }

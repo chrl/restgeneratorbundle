@@ -11,6 +11,14 @@ use FOS\RestBundle\Controller\Annotations\RouteResource;
 use FOS\RestBundle\Controller\Annotations\View;
 use FOS\RestBundle\Request\ParamFetcherInterface;
 use FOS\RestBundle\View\View as FOSView;
+{% if hateoas -%}
+use Hateoas\Configuration\Route;
+use Hateoas\Representation\Factory\PagerfantaFactory;
+use Hateoas\Representation\PaginatedRepresentation;
+{%- endif %}
+{% if document -%}
+use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+{%- endif %}
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 {% if 'annotation' == format -%}
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -29,6 +37,7 @@ use Voryx\RESTGeneratorBundle\Controller\VoryxController;
 {% block phpdoc_class_header %}
  * {{ entity }} controller.
 {% endblock phpdoc_class_header %}
+ *
  * @RouteResource("{{ entity }}")
 {% block phpdoc_class_annotations %}
 {% if 'annotation' == format %}
