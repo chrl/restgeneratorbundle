@@ -2,14 +2,61 @@
 {% block phpdoc_method_header %}
      * Get all {{ entity }} entities.
      *
-     * @View(serializerEnableMaxDepthChecks=true)
+{% block documentation %}
+{% if document %}
+     * @ApiDoc(
+     *   resource = true,
+     *   description = "Get all {{ entity }} entities.",
+     *   section = "{{ entity_plural }}",
+     *   output = {
+     *      "class" = "{{ namespace }}\Entity\{{ entity }}",
+{% if outputGroups | length %}
+     *      "groups" = {
+{%- for group in outputGroups -%}
+    "{{- group -}}"
+    {%- if not loop.last -%}
+        {{ ', ' }}
+    {%- endif -%}
+{%- endfor -%}
+                }
+{% endif %}
+     *   },
+     *   statusCodes = {
+     *     200 = "List of {{ entity }}",
+     *     204 = "No content. Nothing to list."
+     *   }
+     * )
      *
+{% endif %}
+{% endblock documentation %}
+     * @View(
+{% if outputGroups | length %}
+     *   serializerGroups={
+    {%- for group in outputGroups -%}
+        "{{- group -}}"
+        {%- if not loop.last -%}
+            {{ ', ' }}
+        {%- endif -%}
+    {%- endfor -%}
+             },
+{% endif %}
+     *   serializerEnableMaxDepthChecks=true
+     * )
+     *
+     * @param Request $request
      * @param ParamFetcherInterface $paramFetcher
      *
-     * @return Response
+     * @return FOSView|Response
+{%- if hateoas -%}
+    |PaginatedRepresentation
+{% endif %}
      *
-     * @QueryParam(name="offset", requirements="\d+", nullable=true, description="Offset from which to start listing notes.")
-     * @QueryParam(name="limit", requirements="\d+", default="20", description="How many notes to return.")
+{% if hateoas %}
+     * @QueryParam(name="page", requirements="\d+", default="1", description="Page to return.")
+{% else %}
+     * @QueryParam(name="offset", requirements="\d+", nullable=true, description="Offset from which to start listing entities.")
+{% endif %}
+     * @QueryParam(name="limit", requirements="\d+", default="20", description="How many entities to return.")
      * @QueryParam(name="order_by", nullable=true, map=true, description="Order by fields. Must be an array ie. &order_by[name]=ASC&order_by[description]=DESC")
      * @QueryParam(name="filters", nullable=true, map=true, description="Filter by fields. Must be an array ie. &filters[id]=3")
 {% endblock phpdoc_method_header %}
@@ -18,22 +65,40 @@
 {% endblock phpdoc_method_annotations %}
      */
 {% block method_definition %}
-    public function cgetAction(ParamFetcherInterface $paramFetcher)
+    public function cgetAction(Request $request, ParamFetcherInterface $paramFetcher)
 {% endblock method_definition %}
     {
 {% block method_body %}
         try {
+{% if hateoas %}
+            $page = $paramFetcher->get('page');
+{% else %}
             $offset = $paramFetcher->get('offset');
+{% endif %}
             $limit = $paramFetcher->get('limit');
-            $order_by = $paramFetcher->get('order_by');
+            $order_by = !is_null($paramFetcher->get('order_by')) ? $paramFetcher->get('order_by') : array();
             $filters = !is_null($paramFetcher->get('filters')) ? $paramFetcher->get('filters') : array();
 
             $em = $this->getDoctrine()->getManager();
+{% if hateoas %}
+            $pager = $em->getRepository('{{ bundle }}:{{ entity }}')->findPaginated($filters, $order_by, $limit, $page);
+
+            if ($pager) {
+                $routeName           = $request->get('_route');
+                $pagerfantaFactory   = new PagerfantaFactory(); // you can pass the page, and limit parameters name
+                $paginatedCollection = $pagerfantaFactory->createRepresentation(
+                    $pager,
+                    new Route($routeName, array())
+                );
+
+                return $paginatedCollection;
+            }
+{% else %}
             $entities = $em->getRepository('{{ bundle }}:{{ entity }}')->findBy($filters, $order_by, $limit, $offset);
             if ($entities) {
                 return $entities;
             }
-
+{% endif %}
             return FOSView::create('Not Found', Response::HTTP_NO_CONTENT);
         } catch (\Exception $e) {
             return FOSView::create($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -41,4 +106,5 @@
 {% endblock method_body %}
 {% block method_return '' %}
     }
+
 {% block form '' %}

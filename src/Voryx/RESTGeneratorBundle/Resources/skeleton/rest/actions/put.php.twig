@@ -2,12 +2,57 @@
 {% block phpdoc_method_header %}
      * Update a {{ entity }} entity.
      *
-     * @View(serializerEnableMaxDepthChecks=true)
+{% block documentation %}
+{% if document %}
+     * @ApiDoc(
+     *   resource = true,
+     *   description = "Update to a {{ entity }} entity.",
+     *   section = "{{ entity_plural }}",
+     *   input = {
+     *      "class" = "{{ namespace }}\Form\{{ entity }}Type",
+     *      "name" = ""
+     *   },
+     *   output = {
+     *      "class" = "{{ namespace }}\Entity\{{ entity }}",
+{% if outputGroups | length %}
+     *      "groups" = {
+{%- for group in outputGroups -%}
+    "{{- group -}}"
+    {%- if not loop.last -%}
+        {{ ', ' }}
+    {%- endif -%}
+{%- endfor -%}
+                }
+{% endif %}
+     *   },
+     *   statusCodes = {
+     *     200 = "Updated object.",
+     *     400 = "Bad Request. Verify your params.",
+     *     404 = "Not Found.",
+     *     500 = "Form has errors."
+     *   }
+     * )
+     *
+{% endif %}
+{% endblock documentation %}
+     * @View(
+{% if outputGroups | length %}
+     *   serializerGroups={
+    {%- for group in outputGroups -%}
+        "{{- group -}}"
+        {%- if not loop.last -%}
+            {{ ', ' }}
+        {%- endif -%}
+    {%- endfor -%}
+            },
+{% endif %}
+     *   serializerEnableMaxDepthChecks=true
+     * )
      *
      * @param Request $request
      * @param $entity
      *
-     * @return Response
+     * @return FOSView|Response|{{ entity }}
 {% endblock phpdoc_method_header %}
 {% block phpdoc_method_annotations %}
 {% if 'annotation' == format %}{% endif %}
@@ -37,4 +82,5 @@
 {% endblock method_body %}
 {% block method_return '' %}
     }
+
 {% block form '' %}

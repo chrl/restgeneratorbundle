@@ -2,12 +2,27 @@
 {% block phpdoc_method_header %}
      * Delete a {{ entity }} entity.
      *
+{% block documentation %}
+{% if document %}
+     * @ApiDoc(
+     *   resource = true,
+     *   description = "Delete a {{ entity }} entity.",
+     *   section = "{{ entity_plural }}",
+     *   statusCodes = {
+     *     204 = "No content. Successfully excluded.",
+     *     404 = "Not Found.",
+     *     500 = "Internal error."
+     *   }
+     * )
+     *
+{% endif %}
+{% endblock documentation %}
      * @View(statusCode=204)
      *
      * @param Request $request
      * @param $entity
      *
-     * @return Response
+     * @return FOSView|Response
 {% endblock phpdoc_method_header %}
 {% block phpdoc_method_annotations %}
 {% if 'annotation' == format %}{% endif %}

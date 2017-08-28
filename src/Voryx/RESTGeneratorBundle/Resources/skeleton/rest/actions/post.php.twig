@@ -2,11 +2,56 @@
 {% block phpdoc_method_header %}
      * Create a {{ entity }} entity.
      *
-     * @View(statusCode=201, serializerEnableMaxDepthChecks=true)
+{% block documentation %}
+{% if document %}
+     * @ApiDoc(
+     *   resource = true,
+     *   description = "Create a {{ entity }} entity.",
+     *   section = "{{ entity_plural }}",
+     *   input = {
+     *      "class" = "{{ namespace }}\Form\{{ entity }}Type",
+     *      "name" = ""
+     *   },
+     *   output = {
+     *      "class" = "{{ namespace }}\Entity\{{ entity }}",
+{% if outputGroups | length %}
+     *      "groups" = {
+{%- for group in outputGroups -%}
+    "{{- group -}}"
+    {%- if not loop.last -%}
+        {{ ', ' }}
+    {%- endif -%}
+{%- endfor -%}
+                }
+{% endif %}
+     *   },
+     *   statusCodes = {
+     *     201 = "Created object.",
+     *     400 = "Bad Request. Verify your params.",
+     *     500 = "Form has errors."
+     *   }
+     * )
+     *
+{% endif %}
+{% endblock documentation %}
+     * @View(
+{% if outputGroups | length %}
+     *   serializerGroups={
+    {%- for group in outputGroups -%}
+        "{{- group -}}"
+        {%- if not loop.last -%}
+            {{ ', ' }}
+        {%- endif -%}
+    {%- endfor -%}
+             },
+{% endif %}
+     *   statusCode=201,
+     *   serializerEnableMaxDepthChecks=true
+     * )
      *
      * @param Request $request
      *
-     * @return Response
+     * @return FOSView|Response|{{ entity }}
 {% endblock phpdoc_method_header %}
      *
 {% block phpdoc_method_annotations %}
@@ -36,4 +81,5 @@
         return FOSView::create(array('errors' => $form->getErrors()), Response::HTTP_INTERNAL_SERVER_ERROR);
 {% endblock method_return %}
     }
+
 {% block form '' %}

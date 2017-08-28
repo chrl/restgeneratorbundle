@@ -2,9 +2,54 @@
 {% block phpdoc_method_header %}
      * Get a {{ entity }} entity
      *
-     * @View(serializerEnableMaxDepthChecks=true)
+{% block documentation %}
+{% if document %}
+     * @ApiDoc(
+     *   resource = true,
+     *   description = "Get a {{ entity }} entity.",
+     *   section = "{{ entity_plural }}",
+     *   output = {
+     *      "class" = "{{ namespace }}\Entity\{{ entity }}",
+{% if outputGroups | length %}
+     *      "groups" = {
+{%- for group in outputGroups -%}
+     "{{- group -}}"
+    {%- if not loop.last -%}
+        {{ ', ' }}
+    {%- endif -%}
+{%- endfor -%}
+               }
+{% endif %}
+     *   },
+     *   requirements = {
+     *       {"name" = "entity", "dataType" = "Integer", "requirement" = "\d+", "description" = "{{ entity }} ID."},
+     *   },
+     *   statusCodes = {
+     *     200 = "{{ entity }}'s object.",
+     *     404 = "Not Found."
+     *   }
+     * )
      *
-     * @return Response
+{% endif %}
+{% endblock documentation %}
+     * @View(
+{% if outputGroups | length %}
+     *   serializerGroups={
+    {%- for group in outputGroups -%}
+        "{{- group -}}"
+        {%- if not loop.last -%}
+            {{ ', ' }}
+        {%- endif -%}
+    {%- endfor -%}
+             },
+{% endif %}
+     *   serializerEnableMaxDepthChecks=true
+     * )
+     *
+     * @param Request $request
+     * @param $entity
+     *
+     * @return Response|{{ entity }}
 {% endblock phpdoc_method_header %}
      *
 {% block phpdoc_method_annotations %}
@@ -13,7 +58,7 @@
 {% endblock phpdoc_method_annotations %}
      */
 {% block method_definition %}
-    public function getAction({{ entity }} $entity)
+    public function getAction(Request $request, {{ entity }} $entity)
 {% endblock method_definition %}
     {
 {% block method_body %}
@@ -21,4 +66,5 @@
 {% endblock method_body %}
 {% block method_return '' %}
     }
+
 {% block form '' %}

@@ -42,6 +42,8 @@ class GenerateDoctrineRESTCommand extends GenerateDoctrineCrudCommand
                 new InputOption('overwrite', '', InputOption::VALUE_NONE, 'Do not stop the generation if rest api controller already exist, thus overwriting all generated files'),
                 new InputOption('resource', '', InputOption::VALUE_NONE, 'The object will return with the resource name'),
                 new InputOption('document', '', InputOption::VALUE_NONE, 'Use NelmioApiDocBundle to document the controller'),
+                new InputOption('hateoas', '', InputOption::VALUE_NONE, 'Use BazingaHateoasBundle to handle the response'),
+                new InputOption('jms-group', '', InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'JMSSerializerBundle group added to output View and Nelmio Doc. Add multiple times to give an array'),
             )
         )
             ->setDescription('Generates a REST api based on a Doctrine entity')
@@ -94,14 +96,21 @@ EOT
 
         $questionHelper->writeSection($output, 'REST api generation');
 
-        $entityClass = $this->getContainer()->get('doctrine')->getAliasNamespace($bundle) . '\\' . $entity;
-        $metadata    = $this->getEntityMetadata($entityClass);
-        $bundle      = $this->getContainer()->get('kernel')->getBundle($bundle);
-        $resource    = $input->getOption('resource');
-        $document    = $input->getOption('document');
+        $entityClass  = $this->getContainer()->get('doctrine')->getAliasNamespace($bundle) . '\\' . $entity;
+        $metadata     = $this->getEntityMetadata($entityClass);
+        $bundle       = $this->getContainer()->get('kernel')->getBundle($bundle);
+        $resource     = $input->getOption('resource');
+        $document     = $input->getOption('document');
+        $hateoas      = $input->getOption('hateoas');
+        $outputGroups = $input->getOption('jms-group');
 
+        if (!in_array('Default', $outputGroups)) {
+            $outputGroups[] = 'Default';
+        }
+
+        /** @var DoctrineRESTGenerator $generator */
         $generator = $this->getGenerator($bundle);
-        $generator->generate($bundle, $entity, $metadata[0], $prefix, $forceOverwrite, $resource, $document);
+        $generator->generate($bundle, $entity, $metadata[0], $prefix, $forceOverwrite, $resource, $document, $hateoas, $outputGroups);
 
         $output->writeln('Generating the REST api code: <info>OK</info>');
 
@@ -109,7 +118,7 @@ EOT
         $runner = $questionHelper->getRunner($output, $errors);
 
         // form
-        $this->generateForm($bundle, $entity, $metadata);
+        $this->generateForm($bundle, $entity, $metadata, $forceOverwrite);
         $output->writeln('Generating the Form code: <info>OK</info>');
 
         // create route
@@ -175,7 +184,6 @@ EOT
         );
     }
 
-
     /**
      * @param QuestionHelper $questionHelper
      * @param InputInterface $input
@@ -224,7 +232,6 @@ EOT
             );
         }
     }
-
 
     /**
      * @param null $bundle
