@@ -1,6 +1,6 @@
 {
-    "name": "voryx/restgeneratorbundle",
-    "description": "REST API Generator for Symfony 2",
+    "name": "chrl/restgeneratorbundle",
+    "description": "REST API Generator for Symfony 3",
     "type": "symfony-bundle",
     "license": "MIT",
     "authors": [
@@ -9,7 +9,10 @@
         },
         {
             "name": "David Dan"
-        }
+        },
+	{
+	    "name: "Kirill Kholodilin"
+	}
     ],
     "require": {
         "php": ">=5.3.0",
